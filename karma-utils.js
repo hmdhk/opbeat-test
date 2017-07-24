@@ -97,20 +97,20 @@ function getKarmaConfig (karmaConfig, userConfig) {
 
   var isTravis = process.env.TRAVIS
   var isSauce = process.env.MODE && process.env.MODE.startsWith('saucelabs')
-  var buildId
-  var version = karmaConfig.packageVersion
+  var version = userConfig.packageVersion || ''
+  var buildId = 'OpbeatJS@' + version
 
   if (process.env.MODE) {
     console.log('MODE: ' + process.env.MODE)
   }
 
   if (isTravis) {
-    buildId = 'OpbeatJS@' + version + ' - TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
+    buildId = buildId + ' - TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
     // 'karma-chrome-launcher',
     defaultConfig.plugins.push('karma-firefox-launcher')
     defaultConfig.browsers.push('Firefox')
   } else {
-    buildId = 'OpbeatJS@' + version
+    // buildId = 'OpbeatJS@' + version
     defaultConfig.plugins.push('karma-chrome-launcher')
     defaultConfig.browsers.push('Chrome')
 
@@ -139,7 +139,11 @@ function getKarmaConfig (karmaConfig, userConfig) {
 
   if (isSauce) {
     defaultConfig.concurrency = 3
-    defaultConfig.sauceLabs.build = buildId
+    if (process.env.TRAVIS_BRANCH === 'master') { // && process.env.TRAVIS_PULL_REQUEST !== 'false'
+      defaultConfig.sauceLabs.build = buildId
+      defaultConfig.sauceLabs.tags = ['master']
+      console.log('saucelabs.build:', buildId)
+    }
     defaultConfig.reporters = ['dots', 'saucelabs']
     defaultConfig.browsers = Object.keys(defaultLaunchers)
     defaultConfig.transports = ['polling']
